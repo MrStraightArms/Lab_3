@@ -9,6 +9,13 @@ Calculator::~Calculator()
 {
 
 }
+bool Calculator::Is_sqrt(string in_str)
+{
+	string main = "sqrt(";
+	bool res = (in_str.find(main) != string::npos) ? true : false;
+	return res;
+}
+
 
 template <typename T> string Calculator::to_str(const T& t)
 {
@@ -123,6 +130,83 @@ string Calculator::First_priority(string in_str)
 			return result_out;
 		}
 	}
+}
+
+vector<string> Calculator::Find_sqrt(string in_str)
+{
+	string main = "sqrt(", tmp;
+
+	vector<string> out_vector;
+	size_t pos = in_str.find_first_of(main), count = 1, num_in_sqrt = pos + 5;
+	tmp = in_str.substr(0, pos);
+	out_vector.push_back(tmp);
+	tmp.clear();
+	while (count > 0)
+	{
+		tmp.push_back(in_str[num_in_sqrt]);
+		if (in_str[num_in_sqrt] == '(')
+			count++;
+		if (in_str[num_in_sqrt] == ')')
+		{
+			count--;
+			if (count == 0)
+			{
+				out_vector.push_back(tmp.substr(0, tmp.size()-1));
+				tmp.clear();
+				tmp = in_str.substr(num_in_sqrt + 1);
+				out_vector.push_back(tmp);
+				break;
+			}
+		}
+		num_in_sqrt++;
+
+	}
+	return out_vector;
+
+}
+
+string Calculator::Calc_sqrt(string in_str)
+{
+	string tmp_string = in_str;
+
+	if (Is_sqrt(tmp_string))
+	{	
+		vector<string> work_vector = Find_sqrt(tmp_string);
+		if (Is_sqrt(work_vector[2]) && Is_sqrt(work_vector[1]))
+		{
+			tmp_string = work_vector[0] + Calc_sqrt(work_vector[1]) + Calc_sqrt(work_vector[2]);
+			return tmp_string;
+		}
+		else if (!Is_sqrt(work_vector[2]) && Is_sqrt(work_vector[1]))
+		{
+			tmp_string = work_vector[0] + Calc_sqrt(work_vector[1]) + work_vector[2];
+			return tmp_string;
+		}
+		else if (Is_sqrt(work_vector[2]) && !Is_sqrt(work_vector[1]))
+		{
+			tmp_string = work_vector[0] + work_vector[1] + Calc_sqrt(work_vector[2]);
+			return tmp_string;
+		}
+		else
+		{
+			tmp_string = First_priority(work_vector[1]);
+			if (stod(tmp_string) >= 0)
+			{
+				tmp_string = work_vector[0] + to_str(pow(stod(tmp_string), 0.5)) + work_vector[2];
+			}
+			else
+			{
+				throw string("ОШИБКА: под корнем отрицательное число");
+			}
+			return tmp_string;
+		}		
+	}
+	else
+	{
+		return First_priority(tmp_string);
+	}
+
+	
 }
 
 string Calculator::Fourth_priority(string in_str)
@@ -421,15 +505,23 @@ string Calculator::MR_MW_sqrt_functoin(string in_str)
 			tmp = tmp.substr(0, pos) + result_out + tmp.substr(pos + 2);
 		}
 	}
+
+	if (Is_sqrt(tmp))
+	{
+		tmp = Calc_sqrt(tmp);
+	}
 	return tmp;
 }
 
 string Calculator::Calculate(string in_str)
 {
 	string result = MR_MW_sqrt_functoin(in_str);
-	Testing_in_string(result);
-	result =  First_priority(result);
-	result_out = result;
+	if (result != "MW")
+	{
+		Testing_in_string(result);
+		result = First_priority(result);
+		result_out = result;
+	}
 	return result_out;
 }
 
